@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib.auth import login , logout, authenticate
+from .forms import PedidoForm, DetallePedidoFormSet,UsuarioForm,ProductoForm
 # Create your views here.
 
 def index(request):
@@ -31,9 +32,6 @@ def singup(request):
                     'error': 'Constraseñas no coinciden'
         })
 
-def pedidos(request):
-    return render(request , 'pedido.html')
-
 def singout(request):
     logout(request)
     return redirect('home')
@@ -54,3 +52,46 @@ def singin(request):
             login(request, user)
             return redirect('home')
 
+def pedidos(request):
+    return render(request , 'pedido.html')
+
+def crear_pedido(request):
+    if request.method == "POST":
+        pedido_form = PedidoForm(request.POST)
+        formset = DetallePedidoFormSet(request.POST)
+
+        if pedido_form.is_valid() and formset.is_valid():
+            pedido = pedido_form.save()
+            detalles = formset.save(commit=False)
+            for detalle in detalles:
+                detalle.id_pedido = pedido
+                detalle.save()
+            return redirect('lista_pedidos')
+    else:
+        pedido_form = PedidoForm()
+        formset = DetallePedidoFormSet()
+
+    return render(request, 'crear_pedido.html', {
+        'pedido_form': pedido_form,
+        'formset': formset
+    })
+
+def crear_usuario(request):
+    if request.method == "POST":
+        form = UsuarioForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_usuarios')
+    else:
+        form = UsuarioForm()
+    return render(request, 'crear_usuario.html', {'form': form})
+
+def crear_producto(request):
+    if request.method == "POST":
+        form = ProductoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_productos')
+    else:
+        form = ProductoForm()
+    return render(request, 'crear_producto.html', {'form': form})

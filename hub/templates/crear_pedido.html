@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Crear Pedido</h1>
+
+<form action="{% url 'crear_pedido' %}" method="POST">
+    {% csrf_token %}
+
+    <h3>Datos del Pedido</h3>
+    {{ pedido_form.as_p }}
+
+    <h3>Productos</h3>
+    {{ formset.management_form }}
+    {% for form in formset %}
+        <div style="border:1px solid #ccc; margin:10px; padding:10px;">
+            {{ form.as_p }}
+        </div>
+    {% endfor %}
+
+    <button type="submit">Crear</button>
+</form>
+{% endblock %}

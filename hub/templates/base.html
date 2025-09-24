@@ -8,28 +8,23 @@
 <body>
     <nav>
         <ul>
-            <li>
-                <a href="/">Home</a>
-            </li>
-            <li>
-                <a href="/pedido">Pedido</a>
-            </li>
+            <li><a href="{% url 'home' %}">Home</a></li>
+            <li><a href="{% url 'pedido' %}">Pedidos</a></li>
 
             {% if user.is_authenticated %}
-            <li>
-                <a href="/logout">Logout</a>
-            </li>
+                <!-- Accesos visibles solo para logueados -->
+                <li><a href="{% url 'crear_pedido' %}">Crear Pedido</a></li>
+                <li><a href="{% url 'crear_usuario' %}">Crear Usuario</a></li>
+                <li><a href="{% url 'crear_producto' %}">Crear Producto</a></li>
+                <li><a href="{% url 'logout' %}">Logout</a></li>
             {% else %}
-            <li>
-                <a href="/singup">Sing Up</a>
-            </li>
-            <li>
-                <a href="/singin">Login</a>
-            </li>
+                <!-- Accesos visibles para invitados -->
+                <li><a href="{% url 'singup' %}">Sign Up</a></li>
+                <li><a href="{% url 'singin' %}">Login</a></li>
             {% endif %}
-
         </ul>
     </nav>
+
     {% block content %}
     {% endblock %}
 </body>
