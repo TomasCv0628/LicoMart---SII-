@@ -1,23 +1,47 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { FaRegUser } from "react-icons/fa";
+import { FiLogOut } from "react-icons/fi";
+import Logo from "./Logo";
+import SearchBar from "./SearchBar";
+import CartButton from "./CartButton";
+import LoginButton from "./LoginButton";
 
-function Navbar() {
+const Navbar: React.FC = () => {
+  //simulacion logeado
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+
   return (
-    <nav className="bg-black py-2 px-6">
-      <div className="flex justify-between items-center mx-20">
-        <Link
-          to="/"
-          className="text-3xl font-bold bg-gradient-to-r bg-clip-text text-transparent from-blue-300 to-yellow-400"
-        >
-          LicoMart
-        </Link>
-        <input type="text" className="bg-gray-500" />
-        <div className="flex gap-3">
-          <button>🛒</button>
-          <button className="text-white">Iniciar Sesión</button>
+    <nav className="bg-black py-3 px-4">
+      <div className="container mx-auto flex flex-wrap items-center justify-between gap-4">
+        {/* Logo */}
+        <Logo />
+
+        {/* SearchBar: ocultar en pantallas pequeñas */}
+        <div className="hidden md:flex flex-grow justify-center">
+          <SearchBar />
+        </div>
+
+        {/* Botones: carrito y login */}
+        <div className="flex items-center gap-3">
+          {/* Muestra boton de carrito si esta logeado */}
+          {isLoggedIn && <CartButton />}
+
+          {/* Muestra boton de login si no esta logueado*/}
+          <LoginButton
+            onClick={() => setIsLoggedIn(!isLoggedIn)}
+            label={isLoggedIn ? "Cerrar Sesión" : "Iniciar Sesión"}
+            icon={
+              isLoggedIn ? (
+                <FiLogOut className="text-lg" />
+              ) : (
+                <FaRegUser className="text-lg" />
+              )
+            }
+          />
         </div>
       </div>
     </nav>
   );
-}
+};
 
 export default Navbar;
