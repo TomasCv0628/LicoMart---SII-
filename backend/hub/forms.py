@@ -1,32 +1,34 @@
-from django.forms import ModelForm
+from django.forms import ModelForm, modelformset_factory, DateInput
 from .models import Usuarios, Productos, Pedidos, DetallePedido
 from django import forms
 
 class UsuarioForm(ModelForm):
     class Meta:
         model = Usuarios
-        fields = ['nombre', 'email', 'contraseña', 'rol']
+        fields = '__all__'
 
 class ProductoForm(ModelForm):
     class Meta:
         model = Productos
-        fields = ['nombre', 'descripcion', 'stock', 'precio']
+        fields = ['nombre', 'descripcion', 'stock', 'precio', 'imagen']
 
 class PedidoForm(ModelForm):
     class Meta:
         model = Pedidos
-        fields = ['id_usuario', 'fecha', 'estado']
-
+        fields = '__all__'
+        widgets = {
+            'fecha': DateInput(attrs={'type': 'date'})
+        }
 
 class DetallePedidoForm(ModelForm):
     class Meta:
         model = DetallePedido
-        fields = ['id_producto', 'cantidad', 'subtotal']
+        fields = '__all__'
+        exclude = ['subtotal']
 
-DetallePedidoFormSet = forms.inlineformset_factory(
-    Pedidos,               # Modelo padre
-    DetallePedido,         # Modelo hijo
-    form=DetallePedidoForm, # Qué formulario usar para los hijos
-    extra=1,               # cuántos formularios vacíos mostrar por defecto
-    can_delete=True        # si se pueden eliminar detalles
+DetallePedidoFormSet = modelformset_factory(
+    DetallePedido,
+    fields='__all__',
+    exclude=['subtotal'],
+    extra=1
 )
