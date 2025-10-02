@@ -1,4 +1,5 @@
 from django.shortcuts import render , redirect
+from django.http import JsonResponse
 from productos.models import  Productos
 
 # Create your views here.
@@ -6,16 +7,16 @@ from productos.models import  Productos
 def ver_carrito(request):
     carrito = request.session.get('carrito', {})
     total = sum(item['precio'] * item['cantidad'] for item in carrito.values())
-    return render(request, 'carrito.html', {'carrito': carrito, 'total': total})
+    return JsonResponse({'carrito': carrito, 'total': total})
 
 def confirmar_compra(request):
     carrito = request.session.get('carrito', {})
     if not carrito:
-        return redirect('ver_carrito')
+        return JsonResponse({'success': False, 'error': 'El carrito está vacío'})
 
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
-        return redirect('login')
+        return JsonResponse({'success': False, 'error': 'Usuario no autenticado'})
 
     pedido = Pedidos.objects.create(
         id_usuario=Usuarios.objects.get(id=usuario_id),
@@ -26,11 +27,7 @@ def confirmar_compra(request):
     for producto_id, item in carrito.items():
         producto = Productos.objects.get(id=producto_id)
         if producto.stock < item['cantidad']:
-            return render(request, 'carrito.html', {
-                'carrito': carrito,
-                'total': sum(i['precio'] * i['cantidad'] for i in carrito.values()),
-                'error': f"No hay suficiente stock para {producto.nombre}."
-            })
+            return JsonResponse({'success': False, 'error': f"No hay suficiente stock para {producto.nombre}"})
 
         producto.stock -= item['cantidad']
         producto.save()
@@ -43,11 +40,11 @@ def confirmar_compra(request):
         )
 
     request.session['carrito'] = {}
-    return redirect('home')
+    return JsonResponse({'success': True, 'message': 'Compra confirmada'})
 
 def lista_productos(request):
-    productos = Productos.objects.all()  # Obtener todos los productos
-    return render(request, 'lista_productos.html', {'productos': productos})
+    productos = list(Productos.objects.values())
+    return JsonResponse({'productos': productos})
 
 def agregar_al_carrito(request, producto_id):
     if request.method == "POST":
@@ -66,16 +63,15 @@ def agregar_al_carrito(request, producto_id):
             }
 
         request.session['carrito'] = carrito
-        return redirect('ver_carrito')
-    
-    return redirect('lista_productos')  # Redirigir si el método no es POST
+        return JsonResponse({'success': True, 'message': 'Producto agregado al carrito'})
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 def eliminar_del_carrito(request, producto_id):
-    
     carrito = request.session.get('carrito', {})
 
     if str(producto_id) in carrito:
         del carrito[str(producto_id)]
 
     request.session['carrito'] = carrito
-    return redirect('ver_carrito')
+    return JsonResponse({'success': True, 'message': 'Producto eliminado del carrito'})

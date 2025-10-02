@@ -1,7 +1,7 @@
-from django.shortcuts import render
+from django.http import JsonResponse
 from productos.models import Productos
 
 def index(request):
-    productos = Productos.objects.all()
-    return render(request, 'index.html', {'productos': productos})
+    productos = list(Productos.objects.values())
+    return JsonResponse({'productos': productos})
 

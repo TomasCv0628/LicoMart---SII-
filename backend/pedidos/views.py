@@ -1,10 +1,9 @@
+from django.http import JsonResponse
 import datetime
-from django.shortcuts import render, redirect
 from .forms import PedidoForm, DetallePedidoFormSet
 
-# Create your views here.
 def pedidos(request):
-    return render(request, 'pedido.html')
+    return JsonResponse({'success': True, 'message': 'Vista de pedidos'})
 
 def crear_pedido(request):
     if request.method == "POST":
@@ -17,23 +16,15 @@ def crear_pedido(request):
                 try:
                     pedido.fecha = datetime.strptime(pedido.fecha, '%Y-%m-%d').date()
                 except ValueError:
-                    return render(request, 'crear_pedido.html', {
-                        'pedido_form': pedido_form,
-                        'formset': formset,
-                        'error': 'Formato de fecha inválido. Use YYYY-MM-DD.'
-                    })
+                    return JsonResponse({'success': False, 'error': 'Formato de fecha inválido. Use YYYY-MM-DD.'})
 
             pedido.save()
             detalles = formset.save(commit=False)
             for detalle in detalles:
                 detalle.id_pedido = pedido
                 detalle.save()
-            return redirect('lista_pedidos')
-    else:
-        pedido_form = PedidoForm()
-        formset = DetallePedidoFormSet()
+            return JsonResponse({'success': True, 'message': 'Pedido creado exitosamente'})
 
-    return render(request, 'crear_pedido.html', {
-        'pedido_form': pedido_form,
-        'formset': formset
-    })
+        return JsonResponse({'success': False, 'error': 'Datos inválidos', 'errors': pedido_form.errors})
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)

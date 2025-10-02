@@ -1,6 +1,7 @@
-from django.shortcuts import render , redirect
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
 from .forms import ProductoForm
-from .models import  Productos
+from .models import Productos
 
 
 # Create your views here.
@@ -10,11 +11,11 @@ def crear_producto(request):
         form = ProductoForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return redirect('lista_productos')
-    else:
-        form = ProductoForm()
-    return render(request, 'crear_producto.html', {'form': form})
+            return JsonResponse({'success': True, 'message': 'Producto creado exitosamente'})
+        return JsonResponse({'success': False, 'error': 'Datos inválidos', 'errors': form.errors})
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 def lista_productos(request):
-    productos = Productos.objects.all()  # Obtener todos los productos
-    return render(request, 'lista_productos.html', {'productos': productos})
+    productos = list(Productos.objects.values())
+    return JsonResponse({'productos': productos})
