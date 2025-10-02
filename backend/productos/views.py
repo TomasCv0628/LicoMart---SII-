@@ -1,5 +1,4 @@
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
 from .forms import ProductoForm
 from .models import Productos
 
