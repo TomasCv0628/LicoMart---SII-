@@ -11,7 +11,7 @@ const Navbar: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   return (
-    <nav className="bg-black py-3 px-4">
+    <nav className="bg-black py-3 px-4 border-b border-[#374151]">
       <div className="container mx-auto flex flex-wrap items-center justify-between gap-4">
         {/* Logo */}
         <Logo />
