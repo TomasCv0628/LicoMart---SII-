@@ -1,14 +1,15 @@
-from django.shortcuts import render , redirect
+from datetime import date
 from django.http import JsonResponse
-from productos.models import  Productos
-
+from pedidos.models import Pedidos, DetallePedido , Productos
+from usuarios.models import Usuarios
+from django.db import transaction
 # Create your views here.
 
 def ver_carrito(request):
     carrito = request.session.get('carrito', {})
     total = sum(item['precio'] * item['cantidad'] for item in carrito.values())
     return JsonResponse({'carrito': carrito, 'total': total})
-
+@transaction.atomic
 def confirmar_compra(request):
     carrito = request.session.get('carrito', {})
     if not carrito:
@@ -18,17 +19,21 @@ def confirmar_compra(request):
     if not usuario_id:
         return JsonResponse({'success': False, 'error': 'Usuario no autenticado'})
 
+    # Validar stock de todos antes de crear pedido
+    for producto_id, item in carrito.items():
+        producto = Productos.objects.get(id=producto_id)
+        if producto.stock < item['cantidad']:
+            return JsonResponse({'success': False, 'error': f"No hay suficiente stock para {producto.nombre}"})
+
     pedido = Pedidos.objects.create(
         id_usuario=Usuarios.objects.get(id=usuario_id),
         fecha=date.today(),
         estado='Pendiente'
     )
 
+    # Guardar detalles
     for producto_id, item in carrito.items():
         producto = Productos.objects.get(id=producto_id)
-        if producto.stock < item['cantidad']:
-            return JsonResponse({'success': False, 'error': f"No hay suficiente stock para {producto.nombre}"})
-
         producto.stock -= item['cantidad']
         producto.save()
 
@@ -40,11 +45,13 @@ def confirmar_compra(request):
         )
 
     request.session['carrito'] = {}
-    return JsonResponse({'success': True, 'message': 'Compra confirmada'})
-
+    return JsonResponse({'success': True, 'message': 'Compra confirmada', 'pedido_id': pedido.id})
 def lista_productos(request):
     productos = list(Productos.objects.values())
     return JsonResponse({'productos': productos})
+
+def get_object_or_404(model, **kwargs):
+    raise NotImplementedError
 
 def agregar_al_carrito(request, producto_id):
     if request.method == "POST":
