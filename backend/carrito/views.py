@@ -1,14 +1,17 @@
 from datetime import date
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from pedidos.models import Pedidos, DetallePedido , Productos
 from usuarios.models import Usuarios
 from django.db import transaction
 # Create your views here.
 
+@csrf_exempt
 def ver_carrito(request):
     carrito = request.session.get('carrito', {})
     total = sum(item['precio'] * item['cantidad'] for item in carrito.values())
     return JsonResponse({'carrito': carrito, 'total': total})
+@csrf_exempt
 @transaction.atomic
 def confirmar_compra(request):
     carrito = request.session.get('carrito', {})
@@ -53,10 +56,20 @@ def lista_productos(request):
 def get_object_or_404(model, **kwargs):
     raise NotImplementedError
 
+@csrf_exempt
 def agregar_al_carrito(request, producto_id):
     if request.method == "POST":
-        cantidad = int(request.POST.get('cantidad', 1))
-        producto = get_object_or_404(Productos, id=producto_id)
+        import json
+        try:
+            data = json.loads(request.body)
+            cantidad = int(data.get('cantidad', 1))
+        except (json.JSONDecodeError, ValueError):
+            cantidad = 1
+        
+        try:
+            producto = Productos.objects.get(id=producto_id)
+        except Productos.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Producto no encontrado'}, status=404)
 
         carrito = request.session.get('carrito', {})
 
@@ -74,6 +87,7 @@ def agregar_al_carrito(request, producto_id):
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
+@csrf_exempt
 def eliminar_del_carrito(request, producto_id):
     carrito = request.session.get('carrito', {})
 

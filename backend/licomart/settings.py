@@ -48,6 +48,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -55,7 +56,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'licomart.urls'
@@ -133,6 +133,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # URL del frontend en desarrollo
     "http://localhost:5174",  # URL alternativa del frontend
+    "http://127.0.0.1:5173",  # URL alternativa del frontend
+    "http://127.0.0.1:5174",  # URL alternativa del frontend
 ]
 
 # Permitir todas las credenciales
@@ -140,6 +142,9 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Permitir todos los headers
 CORS_ALLOW_ALL_HEADERS = True
+
+# Permitir todos los métodos HTTP
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Configuración de archivos multimedia
 MEDIA_URL = '/media/'  # URL para acceder a los archivos multimedia

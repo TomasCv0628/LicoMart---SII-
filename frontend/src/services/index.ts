@@ -7,3 +7,8 @@ export interface Producto {
   precio: number;
   imagen: string;
 }
+
+export * from "./auth";
+export * from "./productos";
+export * from "./carrito";
+export * from "./api";

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getProductos } from "../services/productos";
+import { agregarAlCarrito } from "../services/carrito";
 import type { Producto } from "../services";
 import type { User } from "../services/auth";
 import FiltroCategorias from "../components/FiltroCategorias";
@@ -18,6 +19,7 @@ function Home({
   const [loading, setLoading] = useState<boolean>(true);
   const [categoriaSeleccionada, setCategoriaSeleccionada] =
     useState<Categoria>("Todos");
+  const [addingToCart, setAddingToCart] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -32,6 +34,24 @@ function Home({
     };
     fetchProductos();
   }, []);
+
+  const handleAgregarAlCarrito = async (productoId: number) => {
+    if (!isLoggedIn) {
+      alert("Debes iniciar sesión para agregar productos al carrito");
+      return;
+    }
+
+    setAddingToCart(productoId);
+    try {
+      await agregarAlCarrito(productoId, 1);
+      alert("Producto agregado al carrito");
+    } catch (error) {
+      console.error("Error al agregar al carrito:", error);
+      alert("Error al agregar el producto al carrito");
+    } finally {
+      setAddingToCart(null);
+    }
+  };
 
   if (loading) {
     return <p className="text-center text-white">Cargando productos...</p>;
@@ -90,8 +110,14 @@ function Home({
                   <p>${producto.precio.toLocaleString()}</p>
                   <p>Stock: {producto.stock}</p>
                 </div>
-                <button className="bg-[#D97706] hover:bg-[#c46b05] text-white font-semibold rounded-md mt-4 py-2 transition-colors">
-                  Agregar al carrito
+                <button
+                  onClick={() => handleAgregarAlCarrito(producto.id)}
+                  disabled={addingToCart === producto.id}
+                  className="bg-[#D97706] hover:bg-[#c46b05] text-white font-semibold rounded-md mt-4 py-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {addingToCart === producto.id
+                    ? "Agregando..."
+                    : "Agregar al carrito"}
                 </button>
               </div>
             </div>
