@@ -6,16 +6,19 @@ import SearchBar from "./SearchBar";
 import CartButton from "./CartButton";
 import LoginButton from "./LoginButton";
 import AuthModal from "./AuthModal";
+import { type User } from "../services/auth";
 
 const Navbar: React.FC<{
   isLoggedIn: boolean;
   setIsLoggedIn: (v: boolean) => void;
-}> = ({ isLoggedIn, setIsLoggedIn }) => {
+  user: User | null;
+  onLogout: () => void;
+}> = ({ isLoggedIn, setIsLoggedIn, user, onLogout }) => {
   const [showModal, setShowModal] = useState(false);
 
   const handleLoginClick = () => {
     if (isLoggedIn) {
-      setIsLoggedIn(false);
+      onLogout();
     } else {
       setShowModal(true);
     }
@@ -32,7 +35,11 @@ const Navbar: React.FC<{
           {isLoggedIn && <CartButton />}
           <LoginButton
             onClick={handleLoginClick}
-            label={isLoggedIn ? "Cerrar Sesión" : "Iniciar Sesión"}
+            label={
+              isLoggedIn
+                ? `Cerrar Sesión${user ? ` (${user.nombre})` : ""}`
+                : "Iniciar Sesión"
+            }
             icon={
               isLoggedIn ? (
                 <FiLogOut className="text-lg" />
@@ -46,7 +53,10 @@ const Navbar: React.FC<{
       <AuthModal
         visible={showModal}
         onClose={() => setShowModal(false)}
-        onLoginSuccess={() => setIsLoggedIn(true)}
+        onLoginSuccess={() => {
+          setIsLoggedIn(true);
+          setShowModal(false);
+        }}
       />
     </nav>
   );

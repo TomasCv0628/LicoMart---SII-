@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { registerUser, loginUser } from "../services/auth";
+import {
+  registerUser,
+  loginUser,
+  saveUserToStorage,
+  type User,
+} from "../services/auth";
 
 type Props = {
   visible: boolean;
@@ -29,8 +34,20 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
     try {
       if (isLogin) {
         // Login con Axios
+        console.log("Intentando login con:", form.identifier);
         const data = await loginUser(form.identifier, form.password);
+        console.log("Respuesta del login:", data);
         if (data.success) {
+          // Crear objeto usuario con los datos recibidos
+          const user: User = {
+            id: data.usuario_id,
+            nombre: form.identifier,
+            email: form.identifier.includes("@") ? form.identifier : "",
+            rol: "usuario",
+          };
+
+          // Guardar usuario en localStorage
+          saveUserToStorage(user);
           onLoginSuccess();
           onClose();
         } else {
@@ -45,12 +62,18 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
         );
         if (data.success) {
           setIsLogin(true); // Cambia a login tras registro exitoso
+          setError(""); // Limpiar errores
         } else {
           setError(data.error || "Error al registrar");
         }
       }
-    } catch {
-      setError("Error de conexión");
+    } catch (error) {
+      console.error("Error:", error);
+      if (error instanceof Error) {
+        setError(`Error de conexión: ${error.message}`);
+      } else {
+        setError("Error de conexión");
+      }
     }
   };
 

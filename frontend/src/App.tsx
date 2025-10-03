@@ -1,16 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Navbar from "./components/Navbar";
+import {
+  isLoggedIn,
+  getUserFromStorage,
+  clearUserFromStorage,
+  type User,
+} from "./services/auth";
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedInState, setIsLoggedInState] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // Verificar si hay un usuario logueado al cargar la app
+    if (isLoggedIn()) {
+      const savedUser = getUserFromStorage();
+      if (savedUser) {
+        setUser(savedUser);
+        setIsLoggedInState(true);
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    clearUserFromStorage();
+    setUser(null);
+    setIsLoggedInState(false);
+  };
 
   return (
     <BrowserRouter>
-      <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+      <Navbar
+        isLoggedIn={isLoggedInState}
+        setIsLoggedIn={setIsLoggedInState}
+        user={user}
+        onLogout={handleLogout}
+      />
       <Routes>
-        <Route path="/" element={<Home isLoggedIn={isLoggedIn} />} />
+        <Route
+          path="/"
+          element={<Home isLoggedIn={isLoggedInState} user={user} />}
+        />
       </Routes>
     </BrowserRouter>
   );

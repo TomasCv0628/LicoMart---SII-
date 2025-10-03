@@ -132,7 +132,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # URL del frontend en desarrollo
+    "http://localhost:5174",  # URL alternativa del frontend
 ]
+
+# Permitir todas las credenciales
+CORS_ALLOW_CREDENTIALS = True
+
+# Permitir todos los headers
+CORS_ALLOW_ALL_HEADERS = True
 
 # Configuración de archivos multimedia
 MEDIA_URL = '/media/'  # URL para acceder a los archivos multimedia

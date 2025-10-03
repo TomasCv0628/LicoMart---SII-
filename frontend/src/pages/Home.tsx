@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
 import { getProductos } from "../services/productos";
 import type { Producto } from "../services";
+import type { User } from "../services/auth";
 import FiltroCategorias from "../components/FiltroCategorias";
 import CartButton from "../components/CartButton";
 
 type Categoria = "Todos" | "Cervezas" | "Whiskeys" | "Vinos" | "Vodkas";
 
-function Home({ isLoggedIn }: { isLoggedIn: boolean }) {
+function Home({
+  isLoggedIn,
+  user,
+}: {
+  isLoggedIn: boolean;
+  user: User | null;
+}) {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [categoriaSeleccionada, setCategoriaSeleccionada] =
@@ -51,9 +58,16 @@ function Home({ isLoggedIn }: { isLoggedIn: boolean }) {
 
       {/* Catálogo */}
       <main className="flex-1">
-        <h1 className="text-white text-lg font-semibold mb-6">
-          {categoriaSeleccionada}
-        </h1>
+        <div className="mb-6">
+          <h1 className="text-white text-lg font-semibold">
+            {categoriaSeleccionada}
+          </h1>
+          {isLoggedIn && user && (
+            <p className="text-gray-300 text-sm mt-1">
+              Bienvenido, {user.nombre}!
+            </p>
+          )}
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {productos.map((producto) => (
             <div
