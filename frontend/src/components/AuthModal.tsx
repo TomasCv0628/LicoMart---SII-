@@ -5,6 +5,7 @@ import {
   saveUserToStorage,
   type User,
 } from "../services/auth";
+import { FaEnvelope, FaLock } from "react-icons/fa"; // usando react-icons
 
 type Props = {
   visible: boolean;
@@ -33,20 +34,14 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
     setError("");
     try {
       if (isLogin) {
-        // Login con Axios
-        console.log("Intentando login con:", form.identifier);
         const data = await loginUser(form.identifier, form.password);
-        console.log("Respuesta del login:", data);
         if (data.success) {
-          // Crear objeto usuario con los datos recibidos
           const user: User = {
             id: data.usuario_id,
             nombre: form.identifier,
             email: form.identifier.includes("@") ? form.identifier : "",
             rol: "usuario",
           };
-
-          // Guardar usuario en localStorage
           saveUserToStorage(user);
           onLoginSuccess();
           onClose();
@@ -54,21 +49,19 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
           setError(data.error || "Error al iniciar sesión");
         }
       } else {
-        // Registro con Axios
         const data = await registerUser(
           form.username,
           form.email,
           form.password
         );
         if (data.success) {
-          setIsLogin(true); // Cambia a login tras registro exitoso
-          setError(""); // Limpiar errores
+          setIsLogin(true);
+          setError("");
         } else {
           setError(data.error || "Error al registrar");
         }
       }
     } catch (error) {
-      console.error("Error:", error);
       if (error instanceof Error) {
         setError(`Error de conexión: ${error.message}`);
       } else {
@@ -79,62 +72,108 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-      <div className="bg-[#1A1D21] p-6 rounded-xl w-full max-w-sm relative">
-        <button className="absolute top-2 right-2 text-white" onClick={onClose}>
+      <div className="bg-[#1A1D21] p-6 rounded-xl w-full max-w-sm relative shadow-lg">
+        <button
+          className="absolute top-2 right-2 text-gray-400 hover:text-white"
+          onClick={onClose}
+        >
           ✕
         </button>
-        <h2 className="text-[#2563EB] font-bold text-lg mb-4">
-          {isLogin ? "Iniciar Sesión" : "Registrarse"}
+
+        {/* Encabezado */}
+        <h2 className="text-white font-semibold text-lg mb-1">
+          Accede a tu cuenta
         </h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <p className="text-[#94A3B8] text-sm mb-3">
+          Inicia sesión en tu cuenta existente o crea una nueva cuenta para
+          acceder a todas las funcionalidades
+        </p>
+
+        {/* Botones login/registro estilo toggle */}
+        <div className="flex bg-[#2A2D31] rounded-lg p-1 mb-4">
+          <button
+            onClick={() => setIsLogin(true)}
+            className={`flex-1 py-2 rounded-md transition ${
+              isLogin
+                ? "bg-[#1A1D21] text-white"
+                : "bg-transparent text-gray-400 hover:text-white"
+            }`}
+          >
+            Iniciar Sesión
+          </button>
+          <button
+            onClick={() => setIsLogin(false)}
+            className={`flex-1 py-2 rounded-md transition ${
+              !isLogin
+                ? "bg-[#1A1D21] text-white"
+                : "bg-transparent text-gray-400 hover:text-white"
+            }`}
+          >
+            Registrarse
+          </button>
+        </div>
+
+        {/* Formulario */}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-1">
           {isLogin ? (
             <>
-              <input
-                name="identifier"
-                type="text"
-                placeholder="Usuario o Email"
-                value={form.identifier}
-                onChange={handleChange}
-                className="p-2 rounded bg-black text-white border"
-                required
-              />
-              <input
-                name="password"
-                type="password"
-                placeholder="Contraseña"
-                value={form.password}
-                onChange={handleChange}
-                className="p-2 rounded bg-black text-white border"
-                required
-              />
+              <p className="text-white">Correo</p>
+              <div className="flex items-center bg-black border border-gray-600 rounded-lg px-2">
+                <FaEnvelope className="text-gray-400 w-5 h-5 mr-2" />
+                <input
+                  name="identifier"
+                  type="text"
+                  placeholder="tu@email.com"
+                  value={form.identifier}
+                  onChange={handleChange}
+                  className="p-2 w-full bg-transparent text-white focus:outline-none"
+                  required
+                />
+              </div>
+              <p className="text-white">Contraseña</p>
+              <div className="flex items-center bg-black border border-gray-600 rounded-lg px-2">
+                <FaLock className="text-gray-400 w-5 h-5 mr-2" />
+                <input
+                  name="password"
+                  type="password"
+                  placeholder="Contraseña"
+                  value={form.password}
+                  onChange={handleChange}
+                  className="p-2 w-full bg-transparent text-white focus:outline-none"
+                  required
+                />
+              </div>
             </>
           ) : (
             <>
+              <p className="text-white">Username</p>
               <input
                 name="username"
                 type="text"
                 placeholder="Usuario"
                 value={form.username}
                 onChange={handleChange}
-                className="p-2 rounded bg-black text-white border"
+                className="p-2 rounded-lg bg-black text-white border border-gray-600"
                 required
               />
+              <p className="text-white">Correo</p>
               <input
                 name="email"
                 type="email"
                 placeholder="Email"
                 value={form.email}
                 onChange={handleChange}
-                className="p-2 rounded bg-black text-white border"
+                className="p-2 rounded-lg bg-black text-white border border-gray-600"
                 required
               />
+              <p className="text-white">Contraseña</p>
               <input
                 name="password"
                 type="password"
                 placeholder="Contraseña"
                 value={form.password}
                 onChange={handleChange}
-                className="p-2 rounded bg-black text-white border"
+                className="p-2 rounded-lg bg-black text-white border border-gray-600"
                 required
               />
             </>
@@ -142,21 +181,11 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
           {error && <p className="text-red-500 text-sm">{error}</p>}
           <button
             type="submit"
-            className="bg-[#2563EB] text-white py-2 rounded font-semibold"
+            className="bg-[#2563EB] text-white py-2 rounded-lg font-semibold hover:bg-blue-700"
           >
-            {isLogin ? "Acceder" : "Registrarse"}
+            {isLogin ? "Iniciar Sesión" : "Registrarse"}
           </button>
         </form>
-        <div className="mt-4 text-center">
-          <button
-            className="text-[#D97706] underline"
-            onClick={() => setIsLogin(!isLogin)}
-          >
-            {isLogin
-              ? "¿No tienes cuenta? Regístrate"
-              : "¿Ya tienes cuenta? Inicia sesión"}
-          </button>
-        </div>
       </div>
     </div>
   );

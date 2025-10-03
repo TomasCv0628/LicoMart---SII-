@@ -4,7 +4,6 @@ import { agregarAlCarrito } from "../services/carrito";
 import type { Producto } from "../services";
 import type { User } from "../services/auth";
 import FiltroCategorias from "../components/FiltroCategorias";
-import CartButton from "../components/CartButton";
 
 type Categoria = "Todos" | "Cervezas" | "Whiskeys" | "Vinos" | "Vodkas";
 
@@ -69,16 +68,11 @@ function Home({
           categoriaSeleccionada={categoriaSeleccionada}
           onCambiarCategoria={setCategoriaSeleccionada}
         />
-        {isLoggedIn && (
-          <div className="mt-6">
-            <CartButton />
-          </div>
-        )}
       </aside>
 
       {/* Catálogo */}
       <main className="flex-1">
-        <div className="mb-6">
+        <div className="mb-6 flex justify-between">
           <h1 className="text-white text-lg font-semibold">
             {categoriaSeleccionada}
           </h1>

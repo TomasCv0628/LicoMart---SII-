@@ -13,7 +13,7 @@ const Navbar: React.FC<{
   setIsLoggedIn: (v: boolean) => void;
   user: User | null;
   onLogout: () => void;
-}> = ({ isLoggedIn, setIsLoggedIn, user, onLogout }) => {
+}> = ({ isLoggedIn, setIsLoggedIn, onLogout }) => {
   const [showModal, setShowModal] = useState(false);
 
   const handleLoginClick = () => {
@@ -35,11 +35,7 @@ const Navbar: React.FC<{
           {isLoggedIn && <CartButton />}
           <LoginButton
             onClick={handleLoginClick}
-            label={
-              isLoggedIn
-                ? `Cerrar Sesión${user ? ` (${user.nombre})` : ""}`
-                : "Iniciar Sesión"
-            }
+            label={isLoggedIn ? "Cerrar Sesión" : "Iniciar Sesión"}
             icon={
               isLoggedIn ? (
                 <FiLogOut className="text-lg" />

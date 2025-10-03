@@ -131,10 +131,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # URL del frontend en desarrollo
-    "http://localhost:5174",  # URL alternativa del frontend
-    "http://127.0.0.1:5173",  # URL alternativa del frontend
-    "http://127.0.0.1:5174",  # URL alternativa del frontend
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 
 # Permitir todas las credenciales
