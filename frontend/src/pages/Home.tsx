@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { getProductos } from "../services/productos";
 import type { Producto } from "../services";
 import FiltroCategorias from "../components/FiltroCategorias";
+import CartButton from "../components/CartButton";
 
 type Categoria = "Todos" | "Cervezas" | "Whiskeys" | "Vinos" | "Vodkas";
 
-function Home() {
+function Home({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [categoriaSeleccionada, setCategoriaSeleccionada] =
@@ -41,6 +42,11 @@ function Home() {
           categoriaSeleccionada={categoriaSeleccionada}
           onCambiarCategoria={setCategoriaSeleccionada}
         />
+        {isLoggedIn && (
+          <div className="mt-6">
+            <CartButton />
+          </div>
+        )}
       </aside>
 
       {/* Catálogo */}

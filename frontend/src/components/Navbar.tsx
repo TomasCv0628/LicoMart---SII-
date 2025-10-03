@@ -5,30 +5,33 @@ import Logo from "./Logo";
 import SearchBar from "./SearchBar";
 import CartButton from "./CartButton";
 import LoginButton from "./LoginButton";
+import AuthModal from "./AuthModal";
 
-const Navbar: React.FC = () => {
-  //simulacion logeado
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+const Navbar: React.FC<{
+  isLoggedIn: boolean;
+  setIsLoggedIn: (v: boolean) => void;
+}> = ({ isLoggedIn, setIsLoggedIn }) => {
+  const [showModal, setShowModal] = useState(false);
+
+  const handleLoginClick = () => {
+    if (isLoggedIn) {
+      setIsLoggedIn(false);
+    } else {
+      setShowModal(true);
+    }
+  };
 
   return (
     <nav className="bg-black py-3 px-4 border-b border-[#374151]">
       <div className="container mx-auto flex flex-wrap items-center justify-between gap-4">
-        {/* Logo */}
         <Logo />
-
-        {/* SearchBar: ocultar en pantallas pequeñas */}
         <div className="hidden md:flex flex-grow justify-center">
           <SearchBar />
         </div>
-
-        {/* Botones: carrito y login */}
         <div className="flex items-center gap-3">
-          {/* Muestra boton de carrito si esta logeado */}
           {isLoggedIn && <CartButton />}
-
-          {/* Muestra boton de login si no esta logueado*/}
           <LoginButton
-            onClick={() => setIsLoggedIn(!isLoggedIn)}
+            onClick={handleLoginClick}
             label={isLoggedIn ? "Cerrar Sesión" : "Iniciar Sesión"}
             icon={
               isLoggedIn ? (
@@ -40,6 +43,11 @@ const Navbar: React.FC = () => {
           />
         </div>
       </div>
+      <AuthModal
+        visible={showModal}
+        onClose={() => setShowModal(false)}
+        onLoginSuccess={() => setIsLoggedIn(true)}
+      />
     </nav>
   );
 };
