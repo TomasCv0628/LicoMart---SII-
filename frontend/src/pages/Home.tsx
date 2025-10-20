@@ -3,21 +3,19 @@ import { getProductos } from "../services/productos";
 import { agregarAlCarrito, getCarrito, type Carrito } from "../services/carrito";
 import type { Producto } from "../services";
 import type { User } from "../services/auth";
-import FiltroCategorias from "../components/FiltroCategorias";
-
-type Categoria = "Todos" | "Cervezas" | "Whiskeys" | "Vinos" | "Vodkas";
 
 function Home({
   isLoggedIn,
   user,
+  search = "",
 }: {
   isLoggedIn: boolean;
   user: User | null;
+  search?: string;
 }) {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [categoriaSeleccionada, setCategoriaSeleccionada] =
-    useState<Categoria>("Todos");
+  
   const [addingToCart, setAddingToCart] = useState<number | null>(null);
   const [carritoCant, setCarritoCant] = useState<Record<number, number>>({});
 
@@ -89,26 +87,23 @@ function Home({
     return <p className="text-center text-white">Cargando productos...</p>;
   }
 
-  return (
-    <div className="min-h-screen flex gap-8 p-6 bg-black">
-      {/* Sidebar Filtro */}
-      <aside className="bg-[#1A1D21] p-4 rounded-xl w-48 shrink-0 self-start">
-        <h2 className="text-[#2563EB] font-bold text-lg mb-1">Categorias</h2>
-        <p className="text-white font-light text-sm mb-4">
-          Filtra tipo de bebida
-        </p>
-        <FiltroCategorias
-          categoriaSeleccionada={categoriaSeleccionada}
-          onCambiarCategoria={setCategoriaSeleccionada}
-        />
-      </aside>
+  const normalizedSearch = search.trim().toLowerCase();
 
+  const filteredProductos = productos.filter((p) => {
+    const name = p.nombre?.toLowerCase() || "";
+    const desc = p.descripcion?.toLowerCase() || "";
+    const matchesSearch = normalizedSearch
+      ? name.includes(normalizedSearch) || desc.includes(normalizedSearch)
+      : true;
+    return matchesSearch;
+  });
+
+  return (
+    <div className="min-h-screen p-6 bg-black">
       {/* Catálogo */}
-      <main className="flex-1">
+      <main className="">
         <div className="mb-6 flex justify-between">
-          <h1 className="text-white text-lg font-semibold">
-            {categoriaSeleccionada}
-          </h1>
+          <h1 className="text-white text-lg font-semibold">Productos</h1>
           {isLoggedIn && user && (
             <p className="text-gray-300 text-sm mt-1">
               Bienvenido, {user.nombre}!
@@ -116,7 +111,7 @@ function Home({
           )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {productos.map((producto) => (
+          {filteredProductos.map((producto) => (
             <div
               key={producto.id}
               className="bg-[#1A1D21] rounded-2xl shadow-lg overflow-hidden flex flex-col"

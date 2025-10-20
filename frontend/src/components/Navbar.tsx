@@ -13,7 +13,9 @@ const Navbar: React.FC<{
   setIsLoggedIn: (v: boolean) => void;
   user: User | null;
   onLogout: () => void;
-}> = ({ isLoggedIn, setIsLoggedIn, onLogout }) => {
+  search: string;
+  setSearch: (v: string) => void;
+}> = ({ isLoggedIn, setIsLoggedIn, onLogout, search, setSearch }) => {
   const [showModal, setShowModal] = useState(false);
 
   const handleLoginClick = () => {
@@ -29,7 +31,7 @@ const Navbar: React.FC<{
       <div className="container mx-auto flex flex-wrap items-center justify-between gap-4">
         <Logo />
         <div className="hidden md:flex flex-grow justify-center">
-          <SearchBar />
+          <SearchBar value={search} onChange={setSearch} />
         </div>
         <div className="flex items-center gap-3">
           {isLoggedIn && <CartButton />}
