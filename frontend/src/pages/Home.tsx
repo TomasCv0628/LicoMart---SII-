@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getProductos } from "../services/productos";
-import { agregarAlCarrito } from "../services/carrito";
+import { agregarAlCarrito, getCarrito, type Carrito } from "../services/carrito";
 import type { Producto } from "../services";
 import type { User } from "../services/auth";
 import FiltroCategorias from "../components/FiltroCategorias";
@@ -19,6 +19,7 @@ function Home({
   const [categoriaSeleccionada, setCategoriaSeleccionada] =
     useState<Categoria>("Todos");
   const [addingToCart, setAddingToCart] = useState<number | null>(null);
+  const [carritoCant, setCarritoCant] = useState<Record<number, number>>({});
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -34,6 +35,38 @@ function Home({
     fetchProductos();
   }, []);
 
+  useEffect(() => {
+    const loadCarrito = async () => {
+      try {
+        const data = await getCarrito();
+        const map: Record<number, number> = {};
+        const carrito: Carrito = (data.carrito as Carrito) || {};
+        for (const [key, item] of Object.entries(carrito)) {
+          const id = Number(key);
+          map[id] = item.cantidad || 0;
+        }
+        setCarritoCant(map);
+      } catch (e) {
+        // noop
+      }
+    };
+    loadCarrito();
+
+    const onUpdated = () => {
+      loadCarrito();
+      (async () => {
+        try {
+          const data = await getProductos();
+          setProductos(data);
+        } catch (e) {
+          // noop
+        }
+      })();
+    };
+    window.addEventListener("carrito:updated", onUpdated);
+    return () => window.removeEventListener("carrito:updated", onUpdated);
+  }, []);
+
   const handleAgregarAlCarrito = async (productoId: number) => {
     if (!isLoggedIn) {
       alert("Debes iniciar sesión para agregar productos al carrito");
@@ -43,7 +76,7 @@ function Home({
     setAddingToCart(productoId);
     try {
       await agregarAlCarrito(productoId, 1);
-      alert("Producto agregado al carrito");
+      window.dispatchEvent(new Event("carrito:updated"));
     } catch (error) {
       console.error("Error al agregar al carrito:", error);
       alert("Error al agregar el producto al carrito");
@@ -102,16 +135,23 @@ function Home({
                 </p>
                 <div className="flex justify-between text-gray-300 text-sm mt-2">
                   <p>${producto.precio.toLocaleString()}</p>
-                  <p>Stock: {producto.stock}</p>
+                  <p>
+                    Stock: {Math.max(0, (producto.stock - (carritoCant[producto.id] || 0)))}
+                  </p>
                 </div>
                 <button
                   onClick={() => handleAgregarAlCarrito(producto.id)}
-                  disabled={addingToCart === producto.id}
+                  disabled={
+                    addingToCart === producto.id ||
+                    (producto.stock - (carritoCant[producto.id] || 0)) <= 0
+                  }
                   className="bg-[#D97706] hover:bg-[#c46b05] text-white font-semibold rounded-md mt-4 py-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {addingToCart === producto.id
                     ? "Agregando..."
-                    : "Agregar al carrito"}
+                    : (producto.stock - (carritoCant[producto.id] || 0)) <= 0
+                      ? "Sin stock"
+                      : "Agregar al carrito"}
                 </button>
               </div>
             </div>

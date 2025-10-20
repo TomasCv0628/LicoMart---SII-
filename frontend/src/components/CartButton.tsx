@@ -1,14 +1,28 @@
 import { useState, useEffect } from "react";
 import { FiShoppingCart } from "react-icons/fi";
-import { getCarrito, type Carrito } from "../services/carrito";
+import {
+  getCarrito,
+  type Carrito,
+  eliminarDelCarrito,
+  confirmarCompra,
+} from "../services/carrito";
 
 const CartButton: React.FC = () => {
   const [carrito, setCarrito] = useState<Carrito>({});
   const [total, setTotal] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     loadCarrito();
+
+    const onUpdated = () => {
+      loadCarrito();
+    };
+    window.addEventListener("carrito:updated", onUpdated);
+    return () => {
+      window.removeEventListener("carrito:updated", onUpdated);
+    };
   }, []);
 
   const loadCarrito = async () => {
@@ -23,6 +37,30 @@ const CartButton: React.FC = () => {
 
   const toggleCarrito = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleEliminar = async (productoId: number) => {
+    try {
+      await eliminarDelCarrito(productoId);
+      await loadCarrito();
+      window.dispatchEvent(new Event("carrito:updated"));
+    } catch (error) {
+      console.error("Error al eliminar del carrito:", error);
+    }
+  };
+
+  const handleConfirmar = async () => {
+    if (Object.keys(carrito).length === 0) return;
+    setSubmitting(true);
+    try {
+      await confirmarCompra();
+      await loadCarrito();
+      window.dispatchEvent(new Event("carrito:updated"));
+    } catch (error) {
+      console.error("Error al confirmar compra:", error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -49,15 +87,23 @@ const CartButton: React.FC = () => {
               <p className="text-gray-400">El carrito está vacío</p>
             ) : (
               <div className="space-y-2">
-                {Object.values(carrito).map((item) => (
+                {Object.entries(carrito).map(([productoId, item]) => (
                   <div
-                    key={item.id}
+                    key={productoId}
                     className="flex justify-between items-center text-white text-sm"
                   >
                     <span>{item.nombre}</span>
-                    <span>
-                      ${item.precio.toLocaleString()} x {item.cantidad}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span>
+                        ${item.precio.toLocaleString()} x {item.cantidad}
+                      </span>
+                      <button
+                        onClick={() => handleEliminar(Number(productoId))}
+                        className="text-red-400 hover:text-red-300 text-xs border border-red-400 px-2 py-0.5 rounded"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </div>
                 ))}
                 <div className="border-t border-gray-600 pt-2 mt-2">
@@ -65,6 +111,13 @@ const CartButton: React.FC = () => {
                     <span>Total:</span>
                     <span>${total.toLocaleString()}</span>
                   </div>
+                  <button
+                    onClick={handleConfirmar}
+                    disabled={submitting}
+                    className="mt-3 w-full bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-sm font-semibold rounded px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? "Enviando..." : "Enviar carrito"}
+                  </button>
                 </div>
               </div>
             )}

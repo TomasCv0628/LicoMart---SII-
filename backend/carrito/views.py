@@ -72,18 +72,30 @@ def agregar_al_carrito(request, producto_id):
             return JsonResponse({'success': False, 'error': 'Producto no encontrado'}, status=404)
 
         carrito = request.session.get('carrito', {})
+        key = str(producto_id)
 
-        if str(producto_id) in carrito:
-            carrito[str(producto_id)]['cantidad'] += cantidad
+        # Cantidad actual en carrito
+        actual = carrito.get(key, {}).get('cantidad', 0)
+        disponible = max(0, producto.stock - actual)
+
+        if disponible <= 0:
+            return JsonResponse({'success': False, 'error': 'Sin stock disponible'}, status=400)
+
+        # Limitar la cantidad a agregar para no superar el stock disponible
+        a_agregar = min(cantidad, disponible)
+
+        if key in carrito:
+            carrito[key]['cantidad'] += a_agregar
         else:
-            carrito[str(producto_id)] = {
+            carrito[key] = {
                 'nombre': producto.nombre,
                 'precio': producto.precio,
-                'cantidad': cantidad,
+                'cantidad': a_agregar,
             }
 
         request.session['carrito'] = carrito
-        return JsonResponse({'success': True, 'message': 'Producto agregado al carrito'})
+        total = sum(item['precio'] * item['cantidad'] for item in carrito.values())
+        return JsonResponse({'success': True, 'message': 'Producto agregado al carrito', 'carrito': carrito, 'total': total})
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
@@ -91,8 +103,24 @@ def agregar_al_carrito(request, producto_id):
 def eliminar_del_carrito(request, producto_id):
     carrito = request.session.get('carrito', {})
 
-    if str(producto_id) in carrito:
-        del carrito[str(producto_id)]
+    if request.method != "POST":
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body) if request.body else {}
+        cantidad = int(data.get('cantidad', 1))
+    except (json.JSONDecodeError, ValueError):
+        cantidad = 1
+
+    key = str(producto_id)
+    if key in carrito:
+        # Si la cantidad restante es mayor a la que se quiere eliminar, decrementa; si no, elimina la entrada.
+        if carrito[key]['cantidad'] > cantidad:
+            carrito[key]['cantidad'] -= cantidad
+        else:
+            del carrito[key]
 
     request.session['carrito'] = carrito
-    return JsonResponse({'success': True, 'message': 'Producto eliminado del carrito'})
+    total = sum(item['precio'] * item['cantidad'] for item in carrito.values())
+    return JsonResponse({'success': True, 'message': 'Producto actualizado en carrito', 'carrito': carrito, 'total': total})

@@ -37,9 +37,12 @@ export const agregarAlCarrito = async (
   }
 };
 
-export const eliminarDelCarrito = async (productoId: number) => {
+export const eliminarDelCarrito = async (
+  productoId: number,
+  cantidad: number = 1
+) => {
   try {
-    const res = await api.post(`/carrito/eliminar/${productoId}/`);
+    const res = await api.post(`/carrito/eliminar/${productoId}/`, { cantidad });
     return res.data;
   } catch (error) {
     console.error("Error al eliminar del carrito:", error);
