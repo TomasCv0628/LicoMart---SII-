@@ -134,20 +134,22 @@ function Home({
                     Stock: {Math.max(0, (producto.stock - (carritoCant[producto.id] || 0)))}
                   </p>
                 </div>
-                <button
-                  onClick={() => handleAgregarAlCarrito(producto.id)}
-                  disabled={
-                    addingToCart === producto.id ||
-                    (producto.stock - (carritoCant[producto.id] || 0)) <= 0
-                  }
-                  className="bg-[#D97706] hover:bg-[#c46b05] text-white font-semibold rounded-md mt-4 py-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {addingToCart === producto.id
-                    ? "Agregando..."
-                    : (producto.stock - (carritoCant[producto.id] || 0)) <= 0
-                      ? "Sin stock"
-                      : "Agregar al carrito"}
-                </button>
+                {user?.rol !== "admin" && (
+                  <button
+                    onClick={() => handleAgregarAlCarrito(producto.id)}
+                    disabled={
+                      addingToCart === producto.id ||
+                      (producto.stock - (carritoCant[producto.id] || 0)) <= 0
+                    }
+                    className="bg-[#D97706] hover:bg-[#c46b05] text-white font-semibold rounded-md mt-4 py-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {addingToCart === producto.id
+                      ? "Agregando..."
+                      : (producto.stock - (carritoCant[producto.id] || 0)) <= 0
+                        ? "Sin stock"
+                        : "Agregar al carrito"}
+                  </button>
+                )}
               </div>
             </div>
           ))}

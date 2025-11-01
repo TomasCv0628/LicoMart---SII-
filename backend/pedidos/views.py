@@ -115,6 +115,9 @@ def actualizar_estado_pedido(request, pedido_id: int):
         return JsonResponse({'success': False, 'error': 'Pedido no encontrado'}, status=404)
 
     pedido.estado = nuevo_estado
+    # Si se marca como Completado, actualiza la fecha al día actual
+    if nuevo_estado == 'Completado':
+        pedido.fecha = datetime.date.today()
     pedido.save()
     return JsonResponse({'success': True, 'message': 'Estado actualizado', 'pedido_id': pedido.id, 'estado': pedido.estado})
 
@@ -129,10 +132,14 @@ def kpis(request):
 
     ingresos_mes = (
         DetallePedido.objects
-        .filter(id_pedido__fecha__gte=primer_dia_mes, id_pedido__fecha__lte=hoy, id_pedido__estado='Completado')
-        .aggregate(total=Sum('subtotal'))
-        .get('total') or 0
-    )
+            .filter(
+                id_pedido__estado='Completado',
+                id_pedido__fecha__gte=primer_dia_mes,
+                id_pedido__fecha__lte=hoy,
+            )
+            .aggregate(total=Sum('subtotal'))
+            .get('total')
+    ) or 0
 
     return JsonResponse({
         'success': True,
@@ -176,7 +183,7 @@ def pedidos_recientes(request):
     qs = (
         Pedidos.objects
         .select_related('id_usuario')
-        .order_by('-fecha')[:limit]
+        .order_by('-id')[:limit]
     )
 
     data = [{
