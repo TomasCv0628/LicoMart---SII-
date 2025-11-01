@@ -27,7 +27,10 @@ def login_view(request):
                 return JsonResponse({
                     'success': True,
                     'message': 'Inicio de sesión exitoso',
-                    'usuario_id': usuario.id
+                    'usuario_id': usuario.id,
+                    'nombre': usuario.nombre,
+                    'email': usuario.email,
+                    'rol': usuario.rol,
                 })
             else:
                 return JsonResponse({'success': False, 'error': 'Contraseña incorrecta'})

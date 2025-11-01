@@ -38,9 +38,9 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
         if (data.success) {
           const user: User = {
             id: data.usuario_id,
-            nombre: form.identifier,
-            email: form.identifier.includes("@") ? form.identifier : "",
-            rol: "usuario",
+            nombre: data.nombre || form.identifier,
+            email: data.email || (form.identifier.includes("@") ? form.identifier : ""),
+            rol: data.rol || "usuario",
           };
           saveUserToStorage(user);
           onLoginSuccess();

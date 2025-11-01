@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Navbar from "./components/Navbar";
+import Admin from "./pages/Admin";
 import {
   isLoggedIn,
   getUserFromStorage,
@@ -31,12 +32,18 @@ function App() {
     setIsLoggedInState(false);
   };
 
+  const AdminRoute = () => {
+    if (isLoggedInState && user?.rol === "admin") return <Admin />;
+    return <Navigate to="/" replace />;
+  };
+
   return (
     <BrowserRouter>
       <Navbar
         isLoggedIn={isLoggedInState}
         setIsLoggedIn={setIsLoggedInState}
         user={user}
+        setUser={setUser}
         onLogout={handleLogout}
         search={searchQuery}
         setSearch={setSearchQuery}
@@ -46,6 +53,7 @@ function App() {
           path="/"
           element={<Home isLoggedIn={isLoggedInState} user={user} search={searchQuery} />}
         />
+        <Route path="/admin" element={<AdminRoute />} />
       </Routes>
     </BrowserRouter>
   );

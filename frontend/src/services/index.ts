@@ -12,3 +12,4 @@ export * from "./auth";
 export * from "./productos";
 export * from "./carrito";
 export * from "./api";
+export * from "./pedidos";

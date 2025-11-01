@@ -6,16 +6,18 @@ import SearchBar from "./SearchBar";
 import CartButton from "./CartButton";
 import LoginButton from "./LoginButton";
 import AuthModal from "./AuthModal";
-import { type User } from "../services/auth";
+import { type User, getUserFromStorage } from "../services/auth";
+import { Link } from "react-router-dom";
 
 const Navbar: React.FC<{
   isLoggedIn: boolean;
   setIsLoggedIn: (v: boolean) => void;
   user: User | null;
+  setUser: (u: User | null) => void;
   onLogout: () => void;
   search: string;
   setSearch: (v: string) => void;
-}> = ({ isLoggedIn, setIsLoggedIn, onLogout, search, setSearch }) => {
+}> = ({ isLoggedIn, setIsLoggedIn, user, setUser, onLogout, search, setSearch }) => {
   const [showModal, setShowModal] = useState(false);
 
   const handleLoginClick = () => {
@@ -34,6 +36,14 @@ const Navbar: React.FC<{
           <SearchBar value={search} onChange={setSearch} />
         </div>
         <div className="flex items-center gap-3">
+          {isLoggedIn && user?.rol === "admin" && (
+            <Link
+              to="/admin"
+              className="text-sm px-3 py-2 rounded-md hover:bg-white/20 transition text-white bg-blue-800"
+            >
+              Admin
+            </Link>
+          )}
           {isLoggedIn && <CartButton />}
           <LoginButton
             onClick={handleLoginClick}
@@ -53,6 +63,8 @@ const Navbar: React.FC<{
         onClose={() => setShowModal(false)}
         onLoginSuccess={() => {
           setIsLoggedIn(true);
+          const saved = getUserFromStorage();
+          if (saved) setUser(saved);
           setShowModal(false);
         }}
       />
