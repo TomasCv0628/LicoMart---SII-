@@ -9,4 +9,5 @@ urlpatterns = [
     path('kpis/', views.kpis, name='kpis'),
     path('top-vendidos/', views.top_vendidos, name='top_vendidos'),
     path('recientes/', views.pedidos_recientes, name='pedidos_recientes'),
+    path('completados/', views.pedidos_completados, name='pedidos_completados'),
 ]

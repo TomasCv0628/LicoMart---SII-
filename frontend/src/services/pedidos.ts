@@ -18,6 +18,16 @@ export interface PedidoReciente {
   fecha: string;
 }
 
+export interface PedidoCompletado {
+  id_pedido: number;
+  tienda: string;
+  nombre_cliente: string;
+  nombre_producto: string;
+  cantidad: number;
+  precio: number;
+  fecha: string;
+}
+
 export async function getKpis(): Promise<KPIs> {
   const res = await api.get<{ success: boolean; data: KPIs }>("/pedidos/kpis/");
   return res.data.data;
@@ -33,6 +43,13 @@ export async function getTopVendidos(limit = 5): Promise<TopVendido[]> {
 export async function getPedidosRecientes(limit = 10): Promise<PedidoReciente[]> {
   const res = await api.get<{ success: boolean; data: PedidoReciente[] }>(
     `/pedidos/recientes/?limit=${limit}`
+  );
+  return res.data.data;
+}
+
+export async function getPedidosCompletados(): Promise<PedidoCompletado[]> {
+  const res = await api.get<{ success: boolean; data: PedidoCompletado[] }>(
+    "/pedidos/completados/"
   );
   return res.data.data;
 }

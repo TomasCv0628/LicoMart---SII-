@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { getProductos } from "../services/productos";
 import type { Producto, KPIs, TopVendido, PedidoReciente } from "../services";
-import { getKpis, getTopVendidos, getPedidosRecientes, actualizarEstadoPedido } from "../services/pedidos";
+import { getKpis, getTopVendidos, getPedidosRecientes, actualizarEstadoPedido, getPedidosCompletados } from "../services/pedidos";
+import type { PedidoCompletado } from "../services/pedidos";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -20,7 +21,9 @@ export default function Admin() {
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [topVendidos, setTopVendidos] = useState<TopVendido[]>([]);
   const [pedidosRecientes, setPedidosRecientes] = useState<PedidoReciente[]>([]);
+  const [pedidosCompletados, setPedidosCompletados] = useState<PedidoCompletado[]>([]);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [loadingCompletados, setLoadingCompletados] = useState(true);
 
   const fetchAll = async () => {
     try {
@@ -41,8 +44,21 @@ export default function Admin() {
     }
   };
 
+  const fetchPedidosCompletados = async () => {
+    try {
+      setLoadingCompletados(true);
+      const data = await getPedidosCompletados();
+      setPedidosCompletados(data);
+    } catch (e) {
+      console.error("Error cargando pedidos completados:", e);
+    } finally {
+      setLoadingCompletados(false);
+    }
+  };
+
   useEffect(() => {
     fetchAll();
+    fetchPedidosCompletados();
   }, []);
 
   const handleEstadoChange = async (pedidoId: number, estado: "Pendiente" | "En Proceso" | "Completado" | "Cancelado") => {
@@ -197,6 +213,47 @@ export default function Admin() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Tabla de Pedidos Completados */}
+      <div className="bg-white/5 rounded-lg p-4 mt-6">
+        <div className="text-xl font-semibold mb-4 text-white">Pedidos Completados</div>
+        {loadingCompletados ? (
+          <p className="text-white">Cargando pedidos completados...</p>
+        ) : pedidosCompletados.length === 0 ? (
+          <p className="text-white">No hay pedidos completados para mostrar.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-left border-b border-white/10 bg-white/10">
+                  <th className="py-2 px-2 text-white">#</th>
+                  <th className="py-2 px-2 text-white">ID Pedido</th>
+                  <th className="py-2 px-2 text-white">Tienda</th>
+                  <th className="py-2 px-2 text-white">Cliente</th>
+                  <th className="py-2 px-2 text-white">Producto</th>
+                  <th className="py-2 px-2 text-white text-right">Cantidad</th>
+                  <th className="py-2 px-2 text-white text-right">Precio</th>
+                  <th className="py-2 px-2 text-white">Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pedidosCompletados.map((pedido, index) => (
+                  <tr key={`${pedido.id_pedido}-${index}`} className="border-b border-white/5">
+                    <td className="py-2 px-2 text-white">{index + 1}</td>
+                    <td className="py-2 px-2 text-white">{pedido.id_pedido}</td>
+                    <td className="py-2 px-2 text-white">{pedido.tienda}</td>
+                    <td className="py-2 px-2 text-white">{pedido.nombre_cliente}</td>
+                    <td className="py-2 px-2 text-white">{pedido.nombre_producto}</td>
+                    <td className="py-2 px-2 text-white text-right">{pedido.cantidad}</td>
+                    <td className="py-2 px-2 text-white text-right">${pedido.precio.toFixed(2)}</td>
+                    <td className="py-2 px-2 text-white">{new Date(pedido.fecha).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
