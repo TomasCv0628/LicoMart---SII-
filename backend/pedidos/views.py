@@ -1,8 +1,10 @@
 from django.http import JsonResponse
 import datetime
 from .forms import PedidoForm, DetallePedidoFormSet
-from django.db.models import Sum
+from django.db.models import Sum, F
 from .models import Pedidos, DetallePedido
+from django.db.models.functions import Concat
+from django.db.models import Value as V
 from django.views.decorators.csrf import csrf_exempt
 import json
 
@@ -194,3 +196,58 @@ def pedidos_recientes(request):
     } for p in qs]
 
     return JsonResponse({'success': True, 'data': data})
+
+
+def pedidos_recientes(request):
+    # Lista de pedidos recientes con cliente, estado y fecha.
+    try:
+        limit = int(request.GET.get('limit', 10))
+        pedidos = (Pedidos.objects
+                   .select_related('id_usuario')
+                   .order_by('-fecha', '-id')[:limit])
+        
+        data = [{
+            'id': p.id,
+            'cliente': p.id_usuario.nombre,
+            'estado': p.estado,
+            'fecha': p.fecha.strftime('%Y-%m-%d')
+        } for p in pedidos]
+        return JsonResponse({'success': True, 'data': data})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+def pedidos_completados(request):
+    # Lista de pedidos completados con todos los detalles necesarios para la tabla
+    try:
+        # Obtener solo los pedidos con estado 'Completado'
+        pedidos = (Pedidos.objects
+                  .filter(estado='Completado')
+                  .select_related('id_usuario')
+                  .order_by('-fecha', '-id'))
+        
+        # Obtener los detalles de cada pedido
+        detalles = (DetallePedido.objects
+                   .filter(id_pedido__in=pedidos)
+                   .select_related('id_producto', 'id_pedido')
+                   .order_by('id_pedido__id'))
+        
+        # Construir la respuesta
+        data = []
+        for detalle in detalles:
+            pedido = detalle.id_pedido
+            producto = detalle.id_producto
+            
+            data.append({
+                'id_pedido': pedido.id,
+                'tienda': 'Licomart',  # Por defecto es Licomart, se puede modificar si se integra con otra tienda
+                'nombre_cliente': pedido.id_usuario.nombre,
+                'nombre_producto': producto.nombre,
+                'cantidad': detalle.cantidad,
+                'precio': float(producto.precio),
+                'fecha': pedido.fecha.strftime('%Y-%m-%d')
+            })
+        
+        return JsonResponse({'success': True, 'data': data})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
