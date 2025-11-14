@@ -47,9 +47,10 @@ export async function getPedidosRecientes(limit = 10): Promise<PedidoReciente[]>
   return res.data.data;
 }
 
-export async function getPedidosCompletados(): Promise<PedidoCompletado[]> {
+export async function getPedidosCompletados(params?: URLSearchParams): Promise<PedidoCompletado[]> {
+  const queryString = params ? `?${params.toString()}` : '';
   const res = await api.get<{ success: boolean; data: PedidoCompletado[] }>(
-    "/pedidos/completados/"
+    `/pedidos/completados/${queryString}`
   );
   return res.data.data;
 }

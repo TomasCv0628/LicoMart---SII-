@@ -24,6 +24,13 @@ export default function Admin() {
   const [pedidosCompletados, setPedidosCompletados] = useState<PedidoCompletado[]>([]);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [loadingCompletados, setLoadingCompletados] = useState(true);
+  const [filters, setFilters] = useState({
+    fechaDesde: '',
+    fechaHasta: '',
+    tienda: '',
+    cliente: '',
+    producto: ''
+  });
 
   const fetchAll = async () => {
     try {
@@ -47,13 +54,47 @@ export default function Admin() {
   const fetchPedidosCompletados = async () => {
     try {
       setLoadingCompletados(true);
-      const data = await getPedidosCompletados();
+      const params = new URLSearchParams();
+      
+      // Add filters to the request if they have values
+      if (filters.fechaDesde) params.append('fecha_desde', filters.fechaDesde);
+      if (filters.fechaHasta) params.append('fecha_hasta', filters.fechaHasta);
+      if (filters.tienda) params.append('tienda', filters.tienda);
+      if (filters.cliente) params.append('cliente', filters.cliente);
+      if (filters.producto) params.append('producto', filters.producto);
+      
+      const data = await getPedidosCompletados(params);
       setPedidosCompletados(data);
     } catch (e) {
       console.error("Error cargando pedidos completados:", e);
     } finally {
       setLoadingCompletados(false);
     }
+  };
+  
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  const handleFilterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchPedidosCompletados();
+  };
+  
+  const resetFilters = () => {
+    setFilters({
+      fechaDesde: '',
+      fechaHasta: '',
+      tienda: '',
+      cliente: '',
+      producto: ''
+    });
+    // Wait for state to update before fetching
+    setTimeout(fetchPedidosCompletados, 0);
   };
 
   useEffect(() => {
@@ -217,7 +258,85 @@ export default function Admin() {
 
       {/* Tabla de Pedidos Completados */}
       <div className="bg-white/5 rounded-lg p-4 mt-6">
-        <div className="text-xl font-semibold mb-4 text-white">Pedidos Completados</div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-white">Pedidos Completados</h2>
+        </div>
+        
+        {/* Filtros */}
+        <form onSubmit={handleFilterSubmit} className="mb-6 bg-gray-800/50 p-3 rounded-lg">
+          <div className="flex flex-wrap gap-3 items-end mb-3">
+            <div className="flex-1 min-w-[150px]">
+              <label className="block text-xs font-medium text-gray-300 mb-1">Fecha desde</label>
+              <input
+                type="date"
+                name="fechaDesde"
+                value={filters.fechaDesde}
+                onChange={handleFilterChange}
+                className="w-full bg-gray-700 text-white rounded p-1.5 text-xs h-9"
+              />
+            </div>
+            <div className="flex-1 min-w-[150px]">
+              <label className="block text-xs font-medium text-gray-300 mb-1">Fecha hasta</label>
+              <input
+                type="date"
+                name="fechaHasta"
+                value={filters.fechaHasta}
+                onChange={handleFilterChange}
+                className="w-full bg-gray-700 text-white rounded p-1.5 text-xs h-9"
+              />
+            </div>
+            <div className="flex-1 min-w-[120px]">
+              <label className="block text-xs font-medium text-gray-300 mb-1">Tienda</label>
+              <select
+                name="tienda"
+                value={filters.tienda}
+                onChange={handleFilterChange}
+                className="w-full bg-gray-700 text-white rounded p-1.5 text-xs h-9"
+              >
+                <option value="">Todas</option>
+                <option value="Licomart">Licomart</option>
+                <option value="Externa">Externa</option>
+              </select>
+            </div>
+            <div className="flex-1 min-w-[150px]">
+              <label className="block text-xs font-medium text-gray-300 mb-1">Cliente</label>
+              <input
+                type="text"
+                name="cliente"
+                value={filters.cliente}
+                onChange={handleFilterChange}
+                placeholder="Buscar cliente"
+                className="w-full bg-gray-700 text-white rounded p-1.5 text-xs h-9"
+              />
+            </div>
+            <div className="flex-1 min-w-[150px]">
+              <label className="block text-xs font-medium text-gray-300 mb-1">Producto</label>
+              <input
+                type="text"
+                name="producto"
+                value={filters.producto}
+                onChange={handleFilterChange}
+                placeholder="Buscar producto"
+                className="w-full bg-gray-700 text-white rounded p-1.5 text-xs h-9"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs font-medium whitespace-nowrap h-9"
+              >
+                Aplicar Filtros
+              </button>
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="px-3 py-1.5 bg-gray-600 text-white rounded hover:bg-gray-700 text-xs font-medium whitespace-nowrap h-9"
+              >
+                Limpiar
+              </button>
+            </div>
+          </div>
+        </form>
         {loadingCompletados ? (
           <p className="text-white">Cargando pedidos completados...</p>
         ) : pedidosCompletados.length === 0 ? (

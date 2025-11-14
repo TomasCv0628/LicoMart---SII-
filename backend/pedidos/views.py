@@ -220,11 +220,33 @@ def pedidos_recientes(request):
 def pedidos_completados(request):
     # Lista de pedidos completados con todos los detalles necesarios para la tabla
     try:
+        # Obtener parámetros de filtrado
+        fecha_desde = request.GET.get('fecha_desde')
+        fecha_hasta = request.GET.get('fecha_hasta')
+        tienda = request.GET.get('tienda')
+        cliente = request.GET.get('cliente', '').lower()
+        producto_filtro = request.GET.get('producto', '').lower()
+        
         # Obtener solo los pedidos con estado 'Completado'
         pedidos = (Pedidos.objects
                   .filter(estado='Completado')
                   .select_related('id_usuario')
                   .order_by('-fecha', '-id'))
+        
+        # Aplicar filtros de fecha si están presentes
+        if fecha_desde:
+            try:
+                fecha_desde_dt = datetime.datetime.strptime(fecha_desde, '%Y-%m-%d').date()
+                pedidos = pedidos.filter(fecha__gte=fecha_desde_dt)
+            except ValueError:
+                return JsonResponse({'success': False, 'error': 'Formato de fecha_desde inválido. Use YYYY-MM-DD.'}, status=400)
+                
+        if fecha_hasta:
+            try:
+                fecha_hasta_dt = datetime.datetime.strptime(fecha_hasta, '%Y-%m-%d').date()
+                pedidos = pedidos.filter(fecha__lte=fecha_hasta_dt)
+            except ValueError:
+                return JsonResponse({'success': False, 'error': 'Formato de fecha_hasta inválido. Use YYYY-MM-DD.'}, status=400)
         
         # Obtener los detalles de cada pedido
         detalles = (DetallePedido.objects
@@ -238,7 +260,7 @@ def pedidos_completados(request):
             pedido = detalle.id_pedido
             producto = detalle.id_producto
             
-            data.append({
+            item = {
                 'id_pedido': pedido.id,
                 'tienda': 'Licomart',  # Por defecto es Licomart, se puede modificar si se integra con otra tienda
                 'nombre_cliente': pedido.id_usuario.nombre,
@@ -246,7 +268,23 @@ def pedidos_completados(request):
                 'cantidad': detalle.cantidad,
                 'precio': float(producto.precio),
                 'fecha': pedido.fecha.strftime('%Y-%m-%d')
-            })
+            }
+            
+            # Aplicar filtros adicionales
+            if tienda and tienda.lower() != item['tienda'].lower():
+                continue
+            if cliente and cliente not in item['nombre_cliente'].lower():
+                continue
+            if producto_filtro and producto_filtro not in item['nombre_producto'].lower():
+                continue
+                
+            data.append(item)
+            
+        # Si no hay filtros aplicados, devolver todos los pedidos completados
+        if not any([fecha_desde, fecha_hasta, tienda, cliente, producto_filtro]) and not data:
+            # Si no hay datos, verificar si hay pedidos completados
+            if not pedidos.exists():
+                return JsonResponse({'success': True, 'data': []})
         
         return JsonResponse({'success': True, 'data': data})
     except Exception as e:
