@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: licomart_db
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: licomart_user
+      MYSQL_PASSWORD: licomart_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  backend:
+    build: ./backend
+    image: tomascv/backend-licomart:latest   # 👈 importante
+    container_name: backend
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DB_NAME: licomart_db
+      DB_USER: licomart_user
+      DB_PASSWORD: licomart_password
+      DB_HOST: db
+      DB_PORT: "3306"
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    image: tomascv/frontend-licomart:latest  # 👈 importante
+    container_name: frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  db_data:
